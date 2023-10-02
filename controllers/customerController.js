@@ -197,7 +197,7 @@ exports.updateMyProfile = async(req, res) =>{
           );
     
           console.log(updatedCustomer); // Add this line for debug logging
-          res.json(updatedCustomer);
+          res.json({customer:updatedCustomer});
         } catch (error) {
           console.error(error); // Add this line for debug logging
           return res.status(500).json({ error: 'Failed to update Customer' });
@@ -260,9 +260,13 @@ exports.updateCustomer = async(req,res) =>{
       if (duplicateCustomer) {
         return res.status(400).json({ error: 'Email or mobile already exists for another customer' });
       }
-
-      // Calculate age based on dob and current date
-      const birthDate = new Date(dob);
+      
+      const dateParts = dob.split("-");
+      const year = parseInt(dateParts[0], 10);
+      const month = parseInt(dateParts[1], 10) - 1; // Months are zero-based (0 = January, 1 = February, ...)
+      const day = parseInt(dateParts[2], 10);
+      const birthDate = new Date(year, month, day);
+     
       const currentDate = new Date();
       let age = currentDate.getFullYear() - birthDate.getFullYear();
 

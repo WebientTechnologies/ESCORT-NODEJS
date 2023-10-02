@@ -59,7 +59,7 @@ const getAllService = async (req, res)  => {
         .populate('createdBy', 'name')
         .populate('updatedBy', 'name')
         .exec();
-        res.json(services);
+        res.json({services:services});
     } catch (error) {
         console.error(error);
         return res.status(500).json({ error: 'Failed to fetch services' });

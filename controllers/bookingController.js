@@ -12,14 +12,16 @@ exports.bookEscort = async(req, res) =>{
 
         const price = escort.price;
         const [hrs, minutes] = bookingHrs.split(':').map(Number);
-
+        const [hours, minute] = bookingTime.split(':').map(Number);
         const bookingHrsDecimal = hrs + (minutes / 60);
 
         // Calculate total price
         const totalPrice = price * bookingHrsDecimal;
 
         const currentDate = new Date();
+        
         const requestedBookingDate = new Date(bookingDate);
+        requestedBookingDate.setHours(hours, minute, 0, 0);
 
         // Check if bookingDate is in the past
         if (requestedBookingDate < currentDate) {
@@ -104,8 +106,19 @@ exports.getEscortBooking = async(req, res) =>{
         const authenticatedUser = req.user;
 
         const userId = authenticatedUser._id;
+        const { bookingStatus } = req.query;
 
-        const booking = await Booking.find({userId:userId}).populate('customerId', 'name').populate('serviceId', 'name').exec();
+        let query = { userId };
+
+        // If bookingStatus is provided, add it to the query
+        if (bookingStatus) {
+        query.bookingStatus = bookingStatus;
+        }
+    
+        const booking = await Booking.find(query)
+          .populate('customerId', 'name')
+          .populate('serviceId', 'name')
+          .exec();
         if(!booking){ 
             return res.status(404).json({ message: 'No data Found' });
 
@@ -123,8 +136,15 @@ exports.getBookingByCustomer = async(req, res) =>{
         const authenticatedUser = req.customer;
 
         const customerId = authenticatedUser._id;
+        const { bookingStatus } = req.query;
 
-        const booking = await Booking.find({customerId:customerId}).populate('userId','-password').populate('serviceId', 'name').exec();
+        let query = { customerId };
+
+        // If bookingStatus is provided, add it to the query
+        if (bookingStatus) {
+        query.bookingStatus = bookingStatus;
+        }
+        const booking = await Booking.find(query).populate('userId','-password').populate('serviceId', 'name').exec();
         if(!booking){ 
             return res.status(404).json({ message: 'No data Found' });
 
