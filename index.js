@@ -12,7 +12,7 @@ app.use(
     cors({
         origin: [
             "http://localhost:3000",
-            "https://es-eta.vercel.app",
+            "https://escorts-service-3603b.web.app",
           ],
           credentials: true,
     })
