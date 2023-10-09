@@ -8,7 +8,7 @@ exports.setCommission = async(req, res) =>{
         if(commission){
             commission.commissionPercentage = commissionPercentage;
             commission.save();
-            return res.status(400).json(commission);
+            return res.status(200).json(commission);
         }
 
         const newCommission = new Commission({
