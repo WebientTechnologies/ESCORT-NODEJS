@@ -98,6 +98,7 @@ router.get("/get-commission-by-escort/:id", auth, isAdmin,  commissionController
 router.get("/get-today-booking-for-escort", auth, escortDashboardController.getTotalBookingsTodayForUser);
 router.get("/get-this-week-booking-for-escort", auth, escortDashboardController.getTotalBookingsThisWeekForUser);
 router.get("/get-this-month-booking-for-escort", auth, escortDashboardController.getTotalBookingsThisMonthForUser);
+router.get("/dashboard", auth, escortDashboardController.getTotalBookingsForUser);
 
 //Dashboard Route//
 router.get("/get-dashboard-data", auth, isAdmin,dashboardController.dashBoardData );
