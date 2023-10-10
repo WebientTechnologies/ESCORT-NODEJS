@@ -107,10 +107,10 @@ exports.signUp = async (req, res) => {
                                 });
 
                                 
-            const deviceId = await admin.auth().createCustomToken(user._id.toString()); // Assuming _id is the user's unique identifier
+            // const deviceId = await admin.auth().createCustomToken(user._id.toString()); // Assuming _id is the user's unique identifier
 
-            // Store the device token in the user's record
-            user.deviceId = deviceId;
+            // // Store the device token in the user's record
+            // user.deviceId = deviceId;
 
             // Save the updated user record
             await user.save();
@@ -198,10 +198,10 @@ exports.loginEscort = async (req,res) => {
                               });
 
                               
-          const deviceId = await admin.auth().createCustomToken(user._id.toString()); // Assuming _id is the user's unique identifier
+          // const deviceId = await admin.auth().createCustomToken(user._id.toString()); // Assuming _id is the user's unique identifier
 
-          // Store the device token in the user's record
-          user.deviceId = deviceId;
+          // // Store the device token in the user's record
+          // user.deviceId = deviceId;
 
           // Save the updated user record
           await user.save();
@@ -716,4 +716,18 @@ exports.updatePassword = async (req, res) => {
     return res.status(500).json({ message: 'Something went wrong' });
   }
 };
+
+exports.getUserByService = async(req, res) =>{
+  try {
+    const serviceId = req.params.serviceId;
+
+    // Find users with the specified serviceId in their serviceIds array
+    const users = await User.find({ serviceIds: { $in: [serviceId] } }).select('-password');
+
+    res.json({ users });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
   
