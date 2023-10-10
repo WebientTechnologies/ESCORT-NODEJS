@@ -55,16 +55,6 @@ const users = new mongoose.Schema(
             required:false,
             maxLength:50,
         },
-        // latitude: {
-        //     type:String,
-        //     required:false,
-        //     maxLength:255,
-        // },
-        // longitude: {
-        //     type:String,
-        //     required:false,
-        //     maxLength:255,
-        // },
         location: {
             type: {
               type: String,

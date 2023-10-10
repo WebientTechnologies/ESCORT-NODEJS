@@ -40,6 +40,7 @@ router.post("/forget-password",  userController.forgotPassword);
 router.post("/reset-password",  userController.resetPassword);
 router.post("/change-password", auth, userController.updatePassword);
 router.get("/get-user-by-service/:serviceId", userController.getUserByService);
+router.get("/get-popular", userController.getPopular);
 
 
 //Customer Route//

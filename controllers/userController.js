@@ -289,6 +289,10 @@ exports.getUser = async (req, res) => {
       filters.name = { $regex: req.query.name, $options: 'i' }; // Case-insensitive name search
     }
 
+    if (req.query.serviceId) {
+      filters.serviceIds = { $in: [req.query.serviceId] }; 
+    }
+
     const users = await User.find(filters)
       .select('-password')
       .populate('serviceIds')
@@ -561,7 +565,17 @@ exports.updateUserServices = async (req, res) => {
   }
 };
 
+exports.getPopular = async (req, res) =>{
+  try {
+    const topUsers = await User.find()
+      .sort({ bookedCount: -1 }) // Sort by bookedCount in descending order
+      .limit(5); // Limit the result to 10 users
 
+    res.json({ success: true, topUsers });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+}
 
 
 
@@ -717,17 +731,34 @@ exports.updatePassword = async (req, res) => {
   }
 };
 
-exports.getUserByService = async(req, res) =>{
+exports.getUserByService = async (req, res) => {
   try {
     const serviceId = req.params.serviceId;
+    const { city, age, name } = req.query;
 
-    // Find users with the specified serviceId in their serviceIds array
-    const users = await User.find({ serviceIds: { $in: [serviceId] } }).select('-password');
+    const baseQuery = { serviceIds: { $in: [serviceId] } };
+
+    // Adding case-insensitive regex for city if provided
+    if (city) {
+      baseQuery.city = { $regex: new RegExp(city, 'i') };
+    }
+
+    // Adding age to the query if provided
+    if (age) {
+      baseQuery.age = { $gte: parseInt(age) };
+    }
+
+    // Adding case-insensitive regex for name if provided
+    if (name) {
+      baseQuery.name = { $regex: new RegExp(name, 'i') };
+    }
+
+    const users = await User.find(baseQuery).select('-password');
 
     res.json({ users });
   } catch (error) {
     console.error('Error fetching users:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
-}
-  
+};
+
