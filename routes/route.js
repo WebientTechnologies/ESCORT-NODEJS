@@ -58,6 +58,7 @@ router.put('/update-recent-view/:id', customerAuth, customerController.updateRec
 router.get('/get-recent-view', customerAuth, customerController.getMyRecentView);
 router.post("/forget-customer-password",  customerController.forgotCustomerPassword);
 router.post("/change-customer-password", customerAuth, customerController.updateCustomerPassword);
+router.delete("/delete-customer/:id",  auth, isAdmin, customerController.deleteCustomer);
 
 //Booking Routes//
 router.post("/book-escort", customerAuth,bookingController.bookEscort);

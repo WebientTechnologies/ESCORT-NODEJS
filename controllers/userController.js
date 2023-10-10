@@ -550,11 +550,9 @@ exports.updateUserServices = async (req, res) => {
     }
 
     // Remove service IDs
-    // if (removeServiceIds && removeServiceIds.length > 0) {
-    //   user.serviceIds = user.serviceIds.filter(serviceId => !removeServiceIds.includes(serviceId));
-    // }
-    const stringRemoveServiceIds = removeServiceIds.map(id => id.toString());
-    user.serviceIds = user.serviceIds.filter(serviceId => !stringRemoveServiceIds.includes(serviceId.toString()));
+    if (removeServiceIds && removeServiceIds.length > 0) {
+      user.serviceIds = user.serviceIds.filter(serviceId => !removeServiceIds.includes(serviceId.toString()));
+    }
 
     const updatedUser = await user.save();
 
@@ -564,6 +562,7 @@ exports.updateUserServices = async (req, res) => {
     return res.status(500).json({ error: 'Failed to update serviceIds for the user' });
   }
 };
+
 
 exports.getPopular = async (req, res) =>{
   try {

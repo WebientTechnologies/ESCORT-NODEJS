@@ -502,3 +502,19 @@ exports.updateCustomerPassword = async (req, res) => {
     return res.status(500).json({ message: 'Something went wrong' });
   }
 };
+
+exports.deleteCustomer = async(req, res) =>{
+  try {
+    const deleteUser = await Customer.findByIdAndDelete(req.params.id);
+    console.log('Deleted User:', deleteUser);
+    
+    if (!deleteUser) {
+      console.log(`Customer with ID ${req.params.id} not found`);
+      return res.status(404).json({ error: 'Customer not found' });
+    }
+    res.json({ message: 'Customer deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Failed to delete Customer' });
+  }
+}
