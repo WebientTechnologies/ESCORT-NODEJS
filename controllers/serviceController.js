@@ -8,9 +8,10 @@ const createService = async (req, res) => {
 
       const userId = authenticatedUser._id;
       const createdBy = userId;
+      const file = req.s3FileUrl;
   
   
-      const newService = new Service({ name, createdBy });
+      const newService = new Service({ name, file, createdBy });
   
       try {
         const savedService = await newService.save();
@@ -30,12 +31,13 @@ const updateService = async (req, res) => {
   
       const { name } = req.body;
       const updatedBy = req.user.id;
+      const file = req.s3FileUrl;
   
   
       try {
         const updatedService = await Service.findByIdAndUpdate(
           req.params.id,
-          { name, updatedBy, updatedAt: Date.now() },
+          { name, file, updatedBy, updatedAt: Date.now() },
           { new: true }
         );
   

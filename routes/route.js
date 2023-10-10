@@ -9,6 +9,7 @@ const ratingController = require('../controllers/ratingController');
 const commissionController = require('../controllers/commissionController');
 const bookingController = require('../controllers/bookingController');
 const escortDashboardController =require('../controllers/escortDashboardController');
+const dashboardController = require('../controllers/dashboardController');
 
 
 
@@ -24,6 +25,7 @@ router.get("/", (req, res) =>{
 //Admin Route//
 router.post("/register-user", userController.signUp);
 router.post("/login-user", userController.login);
+router.post("/login-escort", userController.loginEscort);
 router.get("/my-profile", auth, userController.getMyProfile);//auth
 router.put("/update-user/:id",imageMultiUpload, auth, userController.updateUser);
 router.put("/update-my-profile", auth, userController.updateMyProfile);
@@ -35,6 +37,7 @@ router.get("/get-all-users-for-admin", auth, isAdmin, userController.getUserForA
 router.get("/get-user-by-id/:id",  userController.getUserById);
 router.delete("/delete-user/:id", auth, isAdmin, userController.deleteUser);
 router.post("/forget-password",  userController.forgotPassword);
+router.post("/reset-password",  userController.resetPassword);
 router.post("/change-password", auth, userController.updatePassword);
 
 
@@ -75,8 +78,8 @@ router.delete('/delete-advertisement/:id', auth, isAdmin, advertisementControlle
 
 
 //Service Route//
-router.post("/create-service", auth, isAdmin, serviceController.createService);
-router.put('/update-service/:id', auth,isAdmin, serviceController.updateService);
+router.post("/create-service", imageSingleUpload, auth, isAdmin, serviceController.createService);
+router.put('/update-service/:id', imageSingleUpload, auth,isAdmin, serviceController.updateService);
 router.get("/get-service",  serviceController.getAllService);
 router.get('/get-service-by-id/:id', serviceController.getServiceById);
 router.delete('/delete-service/:id', auth, isAdmin, serviceController.deleteService);
@@ -95,5 +98,10 @@ router.get("/get-commission-by-escort/:id", auth, isAdmin,  commissionController
 router.get("/get-today-booking-for-escort", auth, escortDashboardController.getTotalBookingsTodayForUser);
 router.get("/get-this-week-booking-for-escort", auth, escortDashboardController.getTotalBookingsThisWeekForUser);
 router.get("/get-this-month-booking-for-escort", auth, escortDashboardController.getTotalBookingsThisMonthForUser);
+router.get("/dashboard", auth, escortDashboardController.getTotalBookingsForUser);
+
+//Dashboard Route//
+router.get("/get-dashboard-data", auth, isAdmin,dashboardController.dashBoardData );
+router.get("/get-month-wise-booking", auth, isAdmin,dashboardController.getMonthlyBookingCounts );
 
 module.exports = router;

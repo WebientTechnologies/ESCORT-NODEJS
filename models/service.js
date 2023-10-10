@@ -7,6 +7,23 @@ const services = new mongoose.Schema(
             required:true,
             maxLength:255,
         },
+        file:{
+            Bucket:{
+                type:String,
+                required:false,
+                maxLength:255,
+            },
+            Key:{
+                type:String,
+                required:false,
+                maxLength:255,
+            },
+            Url:{
+                type:String,
+                required:false,
+                maxLength:255,
+            }
+        },
         createdAt:{
             type:Date,
             required:true,

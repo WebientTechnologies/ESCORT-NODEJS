@@ -84,6 +84,12 @@ exports.signUp = async (req, res) => {
                 message:'User is not registered',
             });
         }
+        if(user.role != "Admin"){
+          return res.status(401).json({
+            success:false,
+            message:'You Are Not Admin',
+        });
+        }
         console.log(user._id)
 
         const payload = {
@@ -147,13 +153,107 @@ exports.signUp = async (req, res) => {
     }
 }
 
+exports.loginEscort = async (req,res) => {
+  try {
+
+      //data fetch
+      const {email, password} = req.body;
+      //validation on email and password
+      if(!email || !password) {
+          return res.status(400).json({
+              success:false,
+              message:'PLease fill all the details carefully',
+          });
+      }
+
+      //check for registered user
+      let user = await User.findOne({email});
+      //if not a registered user
+      if(!user) {
+          return res.status(401).json({
+              success:false,
+              message:'User is not registered',
+          });
+      }
+      if(user.role != "Escort"){
+        return res.status(401).json({
+          success:false,
+          message:'You Are Not Escort',
+      });
+      }
+      console.log(user._id)
+
+      const payload = {
+          email:user.email,
+          _id:user._id,
+          role:user.role,
+      };
+      //verify password & generate a JWT token
+      if(await bcrypt.compare(password,user.password) ) {
+          //password match
+          let token =  jwt.sign(payload, 
+                              process.env.JWT_SECRET,
+                              {
+                                  expiresIn:"15d",
+                              });
+
+                              
+          const deviceId = await admin.auth().createCustomToken(user._id.toString()); // Assuming _id is the user's unique identifier
+
+          // Store the device token in the user's record
+          user.deviceId = deviceId;
+
+          // Save the updated user record
+          await user.save();
+          user = user.toObject();
+          user.token = token;
+          user.password = undefined;
+
+          const options = {
+              expires: new Date( Date.now() + 15 * 24 * 60 * 60 * 1000),
+              httpOnly:true,
+              sameSite: 'none',
+              secure: true,
+          }
+
+          
+
+          res.cookie("token", token, options).status(200).json({
+              success:true,
+              token,
+              user,
+              message:'User Logged in successfully',
+          });
+      }
+      else {
+          //passwsord do not match
+          return res.status(403).json({
+              success:false,
+              message:"Password Incorrect",
+          });
+      }
+
+  }
+  catch(error) {
+      console.log(error);
+      return res.status(500).json({
+          success:false,
+          message:'Login Failure',
+      });
+
+  }
+}
+
 exports.getMyProfile = async (req, res) => {
   try {
     const authenticatedUser = req.user;
 
     const userId = authenticatedUser._id;
 
-    const user = await User.findById(userId);
+    const user = await User.findById(userId)
+    .select('-password')
+    .populate('serviceIds')
+    .exec();
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -191,7 +291,7 @@ exports.getUser = async (req, res) => {
 
     const users = await User.find(filters)
       .select('-password')
-      .populate('serviceIds', 'name')
+      .populate('serviceIds')
       .skip((page - 1) * pageSize)
       .limit(pageSize)
       .lean();
@@ -498,25 +598,79 @@ exports.updateUserStatus =async(req, res) =>{
 };
 
 
+
 exports.forgotPassword = async (req, res) => {
-  const { email, newPassword, confirmPassword } = req.body;
+  const { email } = req.body;
 
   try {
-    const user = await User.findOne({ email:email });
+    const user = await User.findOne({ email });
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    if(newPassword != confirmPassword){
-      return res.status(400).json({ message: 'New Password and COnfirm Password is mismatch' });
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000);
+
+    // Save OTP to the user model
+    user.otp = otp;
+    await user.save();
+
+    // Send OTP to the user's email
+    await sendOtpEmail(email, otp);
+
+    return res.status(200).json({ message: 'OTP sent successfully' });
+  } catch (error) {
+    console.error('Error during OTP generation and sending:', error);
+    return res.status(500).json({ message: 'Something went wrong' });
+  }
+};
+
+const sendOtpEmail = async (email, otp) => {
+  // Set up nodemailer transporter
+  const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+      port: 587,
+      auth: {
+          user: "webienttechenv@gmail.com",
+          pass: "ljxugdpijagtxeda",
+      },
+  });
+
+  // Email content
+  const mailOptions = {
+    from: 'webienttechenv@gmail.com',  // Replace with your email
+    to: email,
+    subject: 'Password Reset OTP',
+    text: `Your OTP for password reset is: ${otp}`
+  };
+
+  // Send the email
+  await transporter.sendMail(mailOptions);
+};
+
+exports.resetPassword = async (req, res) => {
+  const { email, otp, newPassword, confirmPassword } = req.body;
+
+  try {
+    const user = await User.findOne({ email, otp });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid OTP' });
     }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ message: 'New Password and Confirm Password mismatch' });
+    }
+
+    // Hash the new password and save it
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
     user.password = hashedPassword;
-    user.save();
+    user.otp = null; // Clear OTP
+    await user.save();
 
-    return res.status(200).json({ message: 'Password Reset Successfully' });
+    return res.status(200).json({ message: 'Password reset successfully' });
   } catch (error) {
     console.error('Error during password reset:', error);
     return res.status(500).json({ message: 'Something went wrong' });

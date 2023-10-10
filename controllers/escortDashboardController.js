@@ -75,5 +75,59 @@ exports.getTotalBookingsThisMonthForUser = async (req, res) => {
     }
   };
   
+
+exports.getTotalBookingsForUser = async (req, res) => {
+    try {
+        const authenticatedUser = req.user;
+        const userId = authenticatedUser._id;
+        const today = new Date();
+
+        const startToday = new Date(today);
+        startToday.setHours(0, 0, 0, 0);
+
+        const endToday = new Date(today);
+        endToday.setDate(endToday.getDate() + 1);
+        endToday.setHours(0, 0, 0, 0);
+
+        const startThisWeek = new Date(today);
+        startThisWeek.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
+        startThisWeek.setHours(0, 0, 0, 0);
+
+        const endThisWeek = new Date(startThisWeek);
+        endThisWeek.setDate(endThisWeek.getDate() + 7);
+        endThisWeek.setHours(0, 0, 0, 0);
+
+        const startThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        startThisMonth.setHours(0, 0, 0, 0);
+
+        const endThisMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        endThisMonth.setHours(0, 0, 0, 0);
+
+        const totalBookingsToday = await Booking.countDocuments({
+            userId,
+            createdAt: { $gte: startToday, $lt: endToday }
+        });
+
+        const totalBookingsThisWeek = await Booking.countDocuments({
+            userId,
+            createdAt: { $gte: startThisWeek, $lt: endThisWeek }
+        });
+
+        const totalBookingsThisMonth = await Booking.countDocuments({
+            userId,
+            createdAt: { $gte: startThisMonth, $lt: endThisMonth }
+        });
+
+        res.json({
+            totalBookingsToday,
+            totalBookingsThisWeek,
+            totalBookingsThisMonth
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+};
+
   
   

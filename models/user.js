@@ -50,6 +50,11 @@ const users = new mongoose.Schema(
             required:false,
             maxLength:50,
         },
+        otp: {
+            type:String,
+            required:false,
+            maxLength:50,
+        },
         // latitude: {
         //     type:String,
         //     required:false,
