@@ -39,6 +39,7 @@ router.delete("/delete-user/:id", auth, isAdmin, userController.deleteUser);
 router.post("/forget-password",  userController.forgotPassword);
 router.post("/reset-password",  userController.resetPassword);
 router.post("/change-password", auth, userController.updatePassword);
+router.get("/get-user-by-service/:serviceId", userController.getUserByService);
 
 
 //Customer Route//
