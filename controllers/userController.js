@@ -69,7 +69,7 @@ exports.signUp = async (req, res) => {
     // Save the new customer to the database
     await newUser.save();
 
-    createUserWithEmailAndPassword(auth, email, hashedPassword)
+    createUserWithEmailAndPassword(auth, email, password)
       .then(async (userCredential) => {
         const user = userCredential.user;
         console.log('User UID:', user.uid);
