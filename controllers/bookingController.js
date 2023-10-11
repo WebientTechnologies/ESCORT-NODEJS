@@ -136,7 +136,7 @@ exports.getBookingByCustomer = async(req, res) =>{
         const authenticatedUser = req.customer;
 
         const customerId = authenticatedUser._id;
-        const { bookingStatus } = req.query;
+        const { bookingStatus, name } = req.query;
 
         let query = { customerId };
 
@@ -144,7 +144,9 @@ exports.getBookingByCustomer = async(req, res) =>{
         if (bookingStatus) {
         query.bookingStatus = bookingStatus;
         }
-        const booking = await Booking.find(query)
+
+
+        const bookings = await Booking.find(query)
         .populate({
             path: 'userId',
             select: '-password',
@@ -153,11 +155,21 @@ exports.getBookingByCustomer = async(req, res) =>{
                 model: 'Service'
             }
         }).populate('serviceId', 'name').exec();
-        if(!booking){ 
+        if(!bookings){ 
             return res.status(404).json({ message: 'No data Found' });
 
         }
-        return res.status(201).json({booking});
+          // Filter the bookings based on userName
+          if(name){
+            const filteredBookings = bookings.filter(booking => {
+              const user = booking.userId;
+              return user.name.toLowerCase().includes(name.toLowerCase());
+            });
+        
+            return res.status(200).json({ bookings: filteredBookings });
+
+          }
+        return res.status(201).json({bookings});
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Something went wrong' });
