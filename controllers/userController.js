@@ -726,12 +726,12 @@ exports.resetPassword = async (req, res) => {
     const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
     user.password = hashedPassword;
 
-    const userDocRef = doc(firestore, 'users', email);
-    await setDoc(userDocRef, {
-      password: hashedPassword,
-      lastPasswordUpdate: serverTimestamp()
-    }, { merge: true });
-    user.otp = null; // Clear OTP
+    // const userDocRef = doc(firestore, 'users', email);
+    // await setDoc(userDocRef, {
+    //   password: hashedPassword,
+    //   lastPasswordUpdate: serverTimestamp()
+    // }, { merge: true });
+    user.otp = null; 
     await user.save();
     return res.status(200).json({ message: 'Password reset successfully' });
   } catch (error) {
@@ -772,11 +772,11 @@ exports.updatePassword = async (req, res) => {
     // Update the password in the user document
     user.password = hashedPassword;
     await user.save();
-    const userDocRef = doc(firestore, 'users', email);
-    await setDoc(userDocRef, {
-      password: hashedPassword,
-      lastPasswordUpdate: serverTimestamp()
-    }, { merge: true });
+    // const userDocRef = doc(firestore, 'users', email);
+    // await setDoc(userDocRef, {
+    //   password: hashedPassword,
+    //   lastPasswordUpdate: serverTimestamp()
+    // }, { merge: true });
     return res.status(200).json({ message: 'Password updated successfully' });
   } catch (error) {
     console.error('Error during password update:', error);
