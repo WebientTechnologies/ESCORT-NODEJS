@@ -144,12 +144,20 @@ exports.getBookingByCustomer = async(req, res) =>{
         if (bookingStatus) {
         query.bookingStatus = bookingStatus;
         }
-        const booking = await Booking.find(query).populate('userId','-password').populate('serviceId', 'name').exec();
+        const booking = await Booking.find(query)
+        .populate({
+            path: 'userId',
+            select: '-password',
+            populate: {
+                path: 'serviceIds',
+                model: 'Service'
+            }
+        }).populate('serviceId', 'name').exec();
         if(!booking){ 
             return res.status(404).json({ message: 'No data Found' });
 
         }
-        return res.status(201).json(booking);
+        return res.status(201).json({booking});
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Something went wrong' });

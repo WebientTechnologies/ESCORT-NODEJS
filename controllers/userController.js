@@ -1,6 +1,7 @@
 const User = require("../models/user");
 const Rating = require('../models/rating');
 const Booking = require('../models/booking');
+const Services = require('../models/service');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
@@ -9,6 +10,7 @@ const nodemailer = require('nodemailer');
 require("dotenv").config();
 const admin = require('firebase-admin'); 
 const serviceAccount = require('../serviceAccount.json');
+const { Service } = require("aws-sdk");
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
 });
@@ -752,9 +754,8 @@ exports.getUserByService = async (req, res) => {
       baseQuery.name = { $regex: new RegExp(name, 'i') };
     }
 
-    const users = await User.find(baseQuery).select('-password');
-
-    res.json({ users });
+    const users = await User.find(baseQuery).select('-password').populate('serviceIds').exec();
+    res.json({users });
   } catch (error) {
     console.error('Error fetching users:', error);
     res.status(500).json({ error: 'Internal Server Error' });
