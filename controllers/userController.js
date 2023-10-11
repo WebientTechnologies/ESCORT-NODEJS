@@ -791,6 +791,8 @@ exports.getUserByService = async (req, res) => {
 
     const baseQuery = { serviceIds: { $in: [serviceId] } };
 
+    baseQuery.status = 'active';
+    baseQuery.role = 'Escort';
     // Adding case-insensitive regex for city if provided
     if (city) {
       baseQuery.city = { $regex: new RegExp(city, 'i') };
