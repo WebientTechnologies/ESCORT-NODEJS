@@ -9,58 +9,97 @@ const { options } = require("../routes/route");
 const nodemailer = require('nodemailer');
 require("dotenv").config();
 const admin = require('firebase-admin'); 
-const serviceAccount = require('../serviceAccount.json');
+const serviceAccount = require('../escort-firebase.json');
 const { Service } = require("aws-sdk");
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-});
+const { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp } = require('firebase/firestore');
+const { initializeApp } = require('firebase/app');
+const { getAuth, createUserWithEmailAndPassword } = require('firebase/auth');
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBCWHyFbekCei5ypdXxX4xf-aDA2gs0JKY",
+  authDomain: "escort-df1c6.firebaseapp.com",
+  projectId: "escort-df1c6",
+  storageBucket: "escort-df1c6.appspot.com",
+  messagingSenderId: "957337834561",
+  appId: "1:957337834561:web:c814f61179358348cfe2c0",
+  measurementId: "G-CT1EHSJC1C"
+};
+
+const app = initializeApp(firebaseConfig);
+const firestore = getFirestore(app);
+const auth = getAuth(app);
 
 exports.signUp = async (req, res) => {
-    try {
-      const { name, email, mobile, password } = req.body;
-  
-      // Check if the email or mobile already exists in the database
-      const existingUser = await User.findOne({
-        $or: [{ email }, { mobile }],
-      });
-  
-      if (existingUser) {
-        return res.status(400).json({ message: 'Email or mobile already exists' });
-      }
-  
-      // Hash the password before saving it to the database
-      const saltRounds = 10;
-      const hashedPassword = await bcrypt.hash(password, saltRounds);
-  
-      // Create the new customer object with the hashed password
-      const newUser = new User({
-        name,
-        email,
-        mobile,
-        password: hashedPassword,
-        email_otp: null,
-        mobile_otp: null,
-        dob: null,
-        age: null,
-        latitude: null,
-        longitude: null,
-        mobile_verified_at: null,
-        email_verified_at: null,
-        file: null,
-        city: null,  
-        pincode: null,
-        address: null,
-      });
-  
-      // Save the new customer to the database
-      await newUser.save();
-  
-      return res.status(201).json({ message: 'User created successfully' });
-    } catch (error) {
-      console.error('Error during customer signup:', error);
-      return res.status(500).json({ message: 'Something went wrong' });
+  try {
+    const { name, email, mobile, password } = req.body;
+
+    // Check if the email or mobile already exists in the database
+    const existingUser = await User.findOne({
+      $or: [{ email }, { mobile }],
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ message: 'Email or mobile already exists' });
     }
-  };
+
+    // Hash the password before saving it to the database
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Create the new customer object with the hashed password
+    const newUser = new User({
+      name,
+      email,
+      mobile,
+      password: hashedPassword,
+      email_otp: null,
+      mobile_otp: null,
+      dob: null,
+      age: null,
+      latitude: null,
+      longitude: null,
+      mobile_verified_at: null,
+      email_verified_at: null,
+      file: null,
+      city: null,
+      pincode: null,
+      address: null,
+    });
+
+    // Save the new customer to the database
+    await newUser.save();
+
+    createUserWithEmailAndPassword(auth, email, hashedPassword)
+      .then(async (userCredential) => {
+        const user = userCredential.user;
+        console.log('User UID:', user.uid);
+
+        const newFirestoreUser = {
+          uid: user.uid,
+          email: user.email,
+          name: newUser.name,
+          image: '',
+          isOnline: true,
+          lastActive: new Date(),
+          chatParticipants: [],
+        };
+
+        const userDocRef = doc(firestore, 'users', user.uid);
+        await setDoc(userDocRef, newFirestoreUser);
+
+        console.log('Document successfully written to Firestore');
+      })
+      .catch((error) => {
+        console.error('Error during Firebase user creation:', error);
+        return res.status(500).json({ message: 'Error during Firebase user creation' });
+      });
+
+    return res.status(201).json({ message: 'User created successfully' });
+  } catch (error) {
+    console.error('Error during customer signup:', error);
+    return res.status(500).json({ message: 'Something went wrong' });
+  }
+};
   
 
 
@@ -395,9 +434,11 @@ exports.updateUser = async(req,res) =>{
         return res.status(400).json({ error: 'Email or mobile already exists for another user' });
       }
       // Calculate age based on dob and current date
+      let age = undefined;
+      if(dob !== null && dob !== undefined && dob !== ''){
       const birthDate = new Date(dob);
       const currentDate = new Date();
-      let age = currentDate.getFullYear() - birthDate.getFullYear();
+       age = currentDate.getFullYear() - birthDate.getFullYear();
 
       // Check if the birthday has already occurred this year
       if (
@@ -407,7 +448,7 @@ exports.updateUser = async(req,res) =>{
       ) {
         age--;
       }
-
+    }
       const user = await User.findById(req.params.id);
        user.name = name;
        user.email = email;
@@ -471,9 +512,11 @@ exports.updateMyProfile = async(req,res) =>{
       return res.status(400).json({ error: 'Email or mobile already exists for another user' });
     }
     // Calculate age based on dob and current date
+    let age = undefined;
+    if(dob !== null && dob !== undefined && dob !== ''){
     const birthDate = new Date(dob);
     const currentDate = new Date();
-    let age = currentDate.getFullYear() - birthDate.getFullYear();
+     age = currentDate.getFullYear() - birthDate.getFullYear();
 
     // Check if the birthday has already occurred this year
     if (
@@ -483,7 +526,7 @@ exports.updateMyProfile = async(req,res) =>{
     ) {
       age--;
     }
-
+  }
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { name, email, mobile, age, dob, bio, price, city, state, pincode,address, updatedBy, updatedAt: Date.now() },
@@ -682,9 +725,14 @@ exports.resetPassword = async (req, res) => {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
     user.password = hashedPassword;
+
+    const userDocRef = doc(firestore, 'users', email);
+    await setDoc(userDocRef, {
+      password: hashedPassword,
+      lastPasswordUpdate: serverTimestamp()
+    }, { merge: true });
     user.otp = null; // Clear OTP
     await user.save();
-
     return res.status(200).json({ message: 'Password reset successfully' });
   } catch (error) {
     console.error('Error during password reset:', error);
@@ -697,7 +745,7 @@ exports.updatePassword = async (req, res) => {
   const authenticatedUser = req.user;
 
   const userId = authenticatedUser._id; // Assuming you have user information in req.user
-
+  const email = authenticatedUser.email;
   try {
     // Find the user by ID
     const user = await User.findById(userId);
@@ -724,7 +772,11 @@ exports.updatePassword = async (req, res) => {
     // Update the password in the user document
     user.password = hashedPassword;
     await user.save();
-
+    const userDocRef = doc(firestore, 'users', email);
+    await setDoc(userDocRef, {
+      password: hashedPassword,
+      lastPasswordUpdate: serverTimestamp()
+    }, { merge: true });
     return res.status(200).json({ message: 'Password updated successfully' });
   } catch (error) {
     console.error('Error during password update:', error);

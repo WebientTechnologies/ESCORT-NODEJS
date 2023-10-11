@@ -57,6 +57,7 @@ router.put('/update-customer/:id', imageSingleUpload,auth, isAdmin, customerCont
 router.put('/update-recent-view/:id', customerAuth, customerController.updateRecentlyViewedEscorts);
 router.get('/get-recent-view', customerAuth, customerController.getMyRecentView);
 router.post("/forget-customer-password",  customerController.forgotCustomerPassword);
+router.post("/reset-customer-password",  customerController.resetCustomerPassword);
 router.post("/change-customer-password", customerAuth, customerController.updateCustomerPassword);
 router.delete("/delete-customer/:id",  auth, isAdmin, customerController.deleteCustomer);
 

@@ -5,6 +5,24 @@ const jwt = require('jsonwebtoken');
 const { options } = require("../routes/route");
 require("dotenv").config();
 
+const { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp } = require('firebase/firestore');
+const { initializeApp } = require('firebase/app');
+const { getAuth, createUserWithEmailAndPassword } = require('firebase/auth');
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBCWHyFbekCei5ypdXxX4xf-aDA2gs0JKY",
+  authDomain: "escort-df1c6.firebaseapp.com",
+  projectId: "escort-df1c6",
+  storageBucket: "escort-df1c6.appspot.com",
+  messagingSenderId: "957337834561",
+  appId: "1:957337834561:web:c814f61179358348cfe2c0",
+  measurementId: "G-CT1EHSJC1C"
+};
+
+const app = initializeApp(firebaseConfig);
+const firestore = getFirestore(app);
+const auth = getAuth(app);
+
 exports.signup = async(req,res) =>{
     try {
         const { name, email, mobile, password, username } = req.body;
@@ -42,6 +60,31 @@ exports.signup = async(req,res) =>{
     
         // Save the new customer to the database
         await newCustomer.save();
+
+        createUserWithEmailAndPassword(auth, email, hashedPassword)
+      .then(async (userCredential) => {
+        const user = userCredential.user;
+        console.log('User UID:', user.uid);
+
+        const newFirestoreUser = {
+          uid: user.uid,
+          email: user.email,
+          name: newCustomer.name,
+          image: '',
+          isOnline: true,
+          lastActive: new Date(),
+          chatParticipants: [],
+        };
+
+        const userDocRef = doc(firestore, 'users', user.uid);
+        await setDoc(userDocRef, newFirestoreUser);
+
+        console.log('Document successfully written to Firestore');
+      })
+      .catch((error) => {
+        console.error('Error during Firebase user creation:', error);
+        return res.status(500).json({ message: 'Error during Firebase user creation' });
+      });
     
         return res.status(201).json({ message: 'Customer created successfully' });
       } catch (error) {
@@ -177,9 +220,11 @@ exports.updateMyProfile = async(req, res) =>{
           }
 
           // Calculate age based on dob and current date
+          let age = undefined;
+          if(dob !== null && dob !== undefined && dob !== ''){
           const birthDate = new Date(dob);
           const currentDate = new Date();
-          let age = currentDate.getFullYear() - birthDate.getFullYear();
+           age = currentDate.getFullYear() - birthDate.getFullYear();
 
           // Check if the birthday has already occurred this year
           if (
@@ -189,7 +234,7 @@ exports.updateMyProfile = async(req, res) =>{
           ) {
             age--;
           }
-    
+        }
           const updatedCustomer = await Customer.findByIdAndUpdate(
             customerId,
             { name, email, mobile, dob, age, username, file, updatedBy, updatedAt: Date.now() },
@@ -260,24 +305,27 @@ exports.updateCustomer = async(req,res) =>{
       if (duplicateCustomer) {
         return res.status(400).json({ error: 'Email or mobile already exists for another customer' });
       }
+      let age = undefined;
+      if(dob !== null && dob !== undefined && dob !== ''){
+        const dateParts = dob.split("-");
+        const year = parseInt(dateParts[0], 10);
+        const month = parseInt(dateParts[1], 10) - 1; 
+        const day = parseInt(dateParts[2], 10);
+        const birthDate = new Date(year, month, day);
       
-      const dateParts = dob.split("-");
-      const year = parseInt(dateParts[0], 10);
-      const month = parseInt(dateParts[1], 10) - 1; // Months are zero-based (0 = January, 1 = February, ...)
-      const day = parseInt(dateParts[2], 10);
-      const birthDate = new Date(year, month, day);
-     
-      const currentDate = new Date();
-      let age = currentDate.getFullYear() - birthDate.getFullYear();
+        const currentDate = new Date();
+         age = currentDate.getFullYear() - birthDate.getFullYear();
 
-      // Check if the birthday has already occurred this year
-      if (
-        currentDate.getMonth() < birthDate.getMonth() ||
-        (currentDate.getMonth() === birthDate.getMonth() &&
-          currentDate.getDate() < birthDate.getDate())
-      ) {
-        age--;
+        // Check if the birthday has already occurred this year
+        if (
+          currentDate.getMonth() < birthDate.getMonth() ||
+          (currentDate.getMonth() === birthDate.getMonth() &&
+            currentDate.getDate() < birthDate.getDate())
+        ) {
+          age--;
+        }
       }
+      
 
       const updatedCustomer = await Customer.findByIdAndUpdate(
         req.params.id,
@@ -439,24 +487,84 @@ exports.getMyRecentView =  async(req, res) =>{
 };
 
 exports.forgotCustomerPassword = async (req, res) => {
-  const { email, newPassword, confirmPassword } = req.body;
+  const { email } = req.body;
 
   try {
-    const customer = await Customer.findOne({ email:email });
+    const customer = await Customer.findOne({ email });
 
     if (!customer) {
       return res.status(404).json({ message: 'customer not found' });
     }
 
-    if(newPassword != confirmPassword){
-      return res.status(400).json({ message: 'New Password and Confirm Password is mismatch' });
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000);
+
+    // Save OTP to the user model
+    customer.otp = otp;
+    await customer.save();
+
+    // Send OTP to the user's email
+    await sendOtpEmail(email, otp);
+
+    return res.status(200).json({ message: 'OTP sent successfully' });
+  } catch (error) {
+    console.error('Error during OTP generation and sending:', error);
+    return res.status(500).json({ message: 'Something went wrong' });
+  }
+};
+
+const sendOtpEmail = async (email, otp) => {
+  // Set up nodemailer transporter
+  const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+      port: 587,
+      auth: {
+          user: "webienttechenv@gmail.com",
+          pass: "ljxugdpijagtxeda",
+      },
+  });
+
+  // Email content
+  const mailOptions = {
+    from: 'webienttechenv@gmail.com',  // Replace with your email
+    to: email,
+    subject: 'Password Reset OTP',
+    text: `Your OTP for password reset is: ${otp}`
+  };
+
+  // Send the email
+  await transporter.sendMail(mailOptions);
+};
+
+exports.resetCustomerPassword = async (req, res) => {
+  const { email, otp, newPassword, confirmPassword } = req.body;
+
+  try {
+    const customer = await Customer.findOne({ email, otp });
+
+    if (!customer) {
+      return res.status(400).json({ message: 'Invalid OTP' });
     }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ message: 'New Password and Confirm Password mismatch' });
+    }
+
+    // Hash the new password and save it
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
     customer.password = hashedPassword;
-    customer.save();
 
-    return res.status(200).json({ message: 'Password Reset Successfully' });
+    const userDocRef = doc(firestore, 'users', email);
+    await setDoc(userDocRef, {
+      password: hashedPassword,
+      lastPasswordUpdate: serverTimestamp()
+    }, { merge: true });
+
+    customer.otp = null; // Clear OTP
+    await customer.save();
+
+    return res.status(200).json({ message: 'Password reset successfully' });
   } catch (error) {
     console.error('Error during password reset:', error);
     return res.status(500).json({ message: 'Something went wrong' });
@@ -495,7 +603,11 @@ exports.updateCustomerPassword = async (req, res) => {
     // Update the password in the user document
     customer.password = hashedPassword;
     await customer.save();
-
+    const userDocRef = doc(firestore, 'users', email);
+        await setDoc(userDocRef, {
+          password: hashedPassword,
+          lastPasswordUpdate: serverTimestamp()
+        }, { merge: true });
     return res.status(200).json({ message: 'Password updated successfully' });
   } catch (error) {
     console.error('Error during password update:', error);

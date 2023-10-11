@@ -96,6 +96,11 @@ const customers = new mongoose.Schema(
               ref: 'User',
             },
         ],
+        otp: {
+            type:String,
+            required:false,
+            maxLength:50,
+        },
         createdAt:{
             type:Date,
             required:true,
