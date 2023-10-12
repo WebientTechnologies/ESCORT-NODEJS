@@ -479,7 +479,7 @@ exports.getMyRecentView =  async(req, res) =>{
     }).select('-password').populate('serviceIds').exec();
 
     // Now you have an array of Escort documents with their details
-    return res.json(recentlyViewedEscorts);
+    return res.json({users:recentlyViewedEscorts});
   } catch (error) {
     console.error('Error getting recently viewed escorts:', error);
     throw error;

@@ -612,13 +612,13 @@ exports.updateUserServices = async (req, res) => {
 exports.getPopular = async (req, res) =>{
   try {
     const role = "Escort";
-    const topUsers = await User.find({role:role})
+    const users = await User.find({role:role})
       .select('-password')
       .populate('serviceIds')
       .sort({ bookedCount: -1 }) // Sort by bookedCount in descending order
       .limit(5); // Limit the result to 10 users
 
-    res.json({ success: true, topUsers });
+    res.json({ success: true, users });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
