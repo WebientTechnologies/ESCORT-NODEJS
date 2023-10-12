@@ -123,7 +123,7 @@ exports.getEscortBooking = async(req, res) =>{
             return res.status(404).json({ message: 'No data Found' });
 
         }
-        return res.status(201).json(booking);
+        return res.status(201).json({booking});
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Something went wrong' });
