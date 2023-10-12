@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { options } = require("../routes/route");
 require("dotenv").config();
+const nodemailer = require('nodemailer');
 
 const { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp } = require('firebase/firestore');
 const { initializeApp } = require('firebase/app');
