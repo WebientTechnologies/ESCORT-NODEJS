@@ -534,7 +534,7 @@ exports.updateMyProfile = async(req,res) =>{
     );
 
     console.log(updatedUser); // Add this line for debug logging
-    res.json(updatedUser);
+    res.json({user:updatedUser});
   } catch (error) {
     console.error(error); // Add this line for debug logging
     return res.status(500).json({ error: 'Failed to update User' });
@@ -566,7 +566,7 @@ exports.updateMyGallery = async (req, res) => {
 
     const updatedUser = await user.save();
 
-    return res.json(updatedUser);
+    return res.json({user:updatedUser});
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: 'Failed to update files for the user' });
@@ -601,7 +601,7 @@ exports.updateUserServices = async (req, res) => {
 
     const updatedUser = await user.save();
 
-    return res.json(updatedUser);
+    return res.json({user:updatedUser});
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: 'Failed to update serviceIds for the user' });
