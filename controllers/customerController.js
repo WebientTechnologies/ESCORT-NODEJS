@@ -61,7 +61,7 @@ exports.signup = async(req,res) =>{
         // Save the new customer to the database
         await newCustomer.save();
 
-        createUserWithEmailAndPassword(auth, email, hashedPassword)
+        createUserWithEmailAndPassword(auth, email, password)
       .then(async (userCredential) => {
         const user = userCredential.user;
         console.log('User UID:', user.uid);
@@ -476,7 +476,7 @@ exports.getMyRecentView =  async(req, res) =>{
     // Use the $in operator to fetch all escort documents by their IDs
     const recentlyViewedEscorts = await User.find({
       _id: { $in: recentlyViewedEscortIds },
-    }).populate('serviceIds', 'name').exec();
+    }).select('-password').populate('serviceIds').exec();
 
     // Now you have an array of Escort documents with their details
     return res.json(recentlyViewedEscorts);

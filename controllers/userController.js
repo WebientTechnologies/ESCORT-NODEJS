@@ -69,7 +69,7 @@ exports.signUp = async (req, res) => {
     // Save the new customer to the database
     await newUser.save();
 
-    createUserWithEmailAndPassword(auth, email, hashedPassword)
+    createUserWithEmailAndPassword(auth, email, password)
       .then(async (userCredential) => {
         const user = userCredential.user;
         console.log('User UID:', user.uid);
@@ -611,7 +611,10 @@ exports.updateUserServices = async (req, res) => {
 
 exports.getPopular = async (req, res) =>{
   try {
-    const topUsers = await User.find()
+    const role = "Escort";
+    const topUsers = await User.find({role:role})
+      .select('-password')
+      .populate('serviceIds')
       .sort({ bookedCount: -1 }) // Sort by bookedCount in descending order
       .limit(5); // Limit the result to 10 users
 
