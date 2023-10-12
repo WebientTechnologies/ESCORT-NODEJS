@@ -116,7 +116,7 @@ exports.getEscortBooking = async(req, res) =>{
         }
     
         const booking = await Booking.find(query)
-          .populate('customerId', 'name', 'email')
+          .populate('customerId','-password')
           .populate('serviceId', 'name')
           .exec();
         if(!booking){ 
