@@ -165,10 +165,22 @@ exports.getBookingByCustomer = async(req, res) =>{
               const user = booking.userId;
               return user.name.toLowerCase().includes(name.toLowerCase());
             });
-        
+
+            filteredBookings.sort((a, b) => {
+                if (a.bookingStatus === 'pending' && b.bookingStatus !== 'pending') return -1;
+                if (a.bookingStatus !== 'pending' && b.bookingStatus === 'pending') return 1;
+                return 0;
+            });
             return res.status(200).json({ bookings: filteredBookings });
 
           }
+
+        bookings.sort((a, b) => {
+            if (a.bookingStatus === 'pending' && b.bookingStatus !== 'pending') return -1;
+            if (a.bookingStatus !== 'pending' && b.bookingStatus === 'pending') return 1;
+            return 0;
+        });
+
         return res.status(201).json({bookings});
     } catch (error) {
         console.error(error);
