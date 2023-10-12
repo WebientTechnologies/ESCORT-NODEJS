@@ -8,7 +8,7 @@ const nodemailer = require('nodemailer');
 
 const { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp } = require('firebase/firestore');
 const { initializeApp } = require('firebase/app');
-const { getAuth, createUserWithEmailAndPassword } = require('firebase/auth');
+const { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword} = require('firebase/auth');
 
 const firebaseConfig = {
   apiKey: "AIzaSyBCWHyFbekCei5ypdXxX4xf-aDA2gs0JKY",
@@ -123,41 +123,42 @@ exports.login = async (req,res) => {
             _id:customer._id,
         };
         //verify password & generate a JWT token
-        if(await bcrypt.compare(password,customer.password) ) {
+        // if(await bcrypt.compare(password,customer.password) ) {
             //password match
-            let token =  jwt.sign(payload, 
-                                process.env.JWT_SECRET,
-                                {
-                                    expiresIn:"15d",
-                                });
 
-                                
+            signInWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+              // Signed in 
+              const user = userCredential.user;
+              let token =  jwt.sign(payload, 
+                process.env.JWT_SECRET,
+                {
+                    expiresIn:"15d",
+                });                          
 
-            customer = customer.toObject();
-            customer.token = token;
-            customer.password = undefined;
+                    customer = customer.toObject();
+                    customer.token = token;
+                    customer.password = undefined;
 
-            const options = {
-                expires: new Date( Date.now() + 15 * 24 * 60 * 60 * 1000),
-                httpOnly:true,
-                sameSite: 'none',
-                secure: true,
-            }
+                    const options = {
+                    expires: new Date( Date.now() + 15 * 24 * 60 * 60 * 1000),
+                    httpOnly:true,
+                    sameSite: 'none',
+                    secure: true,
+                    }
 
-            res.cookie("token", token, options).status(200).json({
-                success:true,
-                token,
-                customer,
-                message:'customer Logged in successfully',
+                    res.cookie("token", token, options).status(200).json({
+                    success:true,
+                    token,
+                    customer,
+                    message:'customer Logged in successfully',
+                });
+              // ...
+            })
+            .catch((error) => {
+              const errorCode = error.code;
+              const errorMessage = error.message;
             });
-        }
-        else {
-            //passwsord do not match
-            return res.status(403).json({
-                success:false,
-                message:"Password Incorrect",
-            });
-        }
 
     }
     catch(error) {

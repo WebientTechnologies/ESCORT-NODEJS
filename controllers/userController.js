@@ -13,7 +13,7 @@ const serviceAccount = require('../escort-firebase.json');
 const { Service } = require("aws-sdk");
 const { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp } = require('firebase/firestore');
 const { initializeApp } = require('firebase/app');
-const { getAuth, createUserWithEmailAndPassword } = require('firebase/auth');
+const { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword} = require('firebase/auth');
 
 const firebaseConfig = {
   apiKey: "AIzaSyBCWHyFbekCei5ypdXxX4xf-aDA2gs0JKY",
@@ -229,23 +229,16 @@ exports.loginEscort = async (req,res) => {
           _id:user._id,
           role:user.role,
       };
-      //verify password & generate a JWT token
-      if(await bcrypt.compare(password,user.password) ) {
-          //password match
+      signInWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        // Signed in 
+        const userfire = userCredential.user;
           let token =  jwt.sign(payload, 
                               process.env.JWT_SECRET,
                               {
                                   expiresIn:"15d",
                               });
-
-                              
-          // const deviceId = await admin.auth().createCustomToken(user._id.toString()); // Assuming _id is the user's unique identifier
-
-          // // Store the device token in the user's record
-          // user.deviceId = deviceId;
-
-          // Save the updated user record
-          await user.save();
+        
           user = user.toObject();
           user.token = token;
           user.password = undefined;
@@ -255,9 +248,7 @@ exports.loginEscort = async (req,res) => {
               httpOnly:true,
               sameSite: 'none',
               secure: true,
-          }
-
-          
+          }  
 
           res.cookie("token", token, options).status(200).json({
               success:true,
@@ -265,15 +256,13 @@ exports.loginEscort = async (req,res) => {
               user,
               message:'User Logged in successfully',
           });
-      }
-      else {
-          //passwsord do not match
-          return res.status(403).json({
-              success:false,
-              message:"Password Incorrect",
-          });
-      }
 
+        // ...
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+      });
   }
   catch(error) {
       console.log(error);
