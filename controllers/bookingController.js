@@ -155,6 +155,7 @@ exports.getBookingByCustomer = async(req, res) =>{
                 model: 'Service'
             }
         }).populate('serviceId', 'name').exec();
+        
         if(!bookings){ 
             return res.status(404).json({ message: 'No data Found' });
 
@@ -162,24 +163,12 @@ exports.getBookingByCustomer = async(req, res) =>{
           // Filter the bookings based on userName
           if(name){
             const filteredBookings = bookings.filter(booking => {
-              const user = booking.userId;
-              return user.name.toLowerCase().includes(name.toLowerCase());
-            });
-
-            filteredBookings.sort((a, b) => {
-                if (a.bookingStatus === 'pending' && b.bookingStatus !== 'pending') return -1;
-                if (a.bookingStatus !== 'pending' && b.bookingStatus === 'pending') return 1;
-                return 0;
+                const user = booking.userId;
+                return user && user.name && user.name.toLowerCase().includes(name.toLowerCase());
             });
             return res.status(200).json({ bookings: filteredBookings });
 
           }
-
-        bookings.sort((a, b) => {
-            if (a.bookingStatus === 'pending' && b.bookingStatus !== 'pending') return -1;
-            if (a.bookingStatus !== 'pending' && b.bookingStatus === 'pending') return 1;
-            return 0;
-        });
 
         return res.status(201).json({bookings});
     } catch (error) {
