@@ -63,12 +63,12 @@ exports.bookEscort = async(req, res) =>{
             bookingHrs,
             amount : totalPrice,
         });
-
+        const name = authenticatedUser.name;
         const escortDeviceToken = escort.deviceId;  // Assuming you have a device token for the escort
         const payload = {
           notification: {
             title: 'Booking Confirmation',
-            body: 'You have a new booking request.'
+            body: name + ' ' + ' ' +'has sent booking request.'
           }
         };
     
@@ -224,10 +224,13 @@ exports.updateBookingStatus = async(req, res) =>{
         const customerId = updateStatus.customerId;
         const customer = await Customer.findById(customerId);
         const token = customer.deviceId;
+        const authenticatedUser = req.user;
+
+        const name = authenticatedUser.name;
         const payload = {
             notification: {
               title: 'Booking Status',
-              body: 'You Bokking with bookingId' + ' ' + bookingId + ' ' + 'is now' + ' ' + status
+              body:  name + ' ' + status + ' ' + 'your booking'
             }
           };
       
