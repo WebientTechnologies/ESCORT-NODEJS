@@ -101,6 +101,11 @@ const customers = new mongoose.Schema(
             required:false,
             maxLength:50,
         },
+        deviceId:{
+            type:String,
+            required:false,
+            maxLength:800,
+        },
         createdAt:{
             type:Date,
             required:true,

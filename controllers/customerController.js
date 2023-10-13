@@ -98,7 +98,7 @@ exports.login = async (req,res) => {
     try {
 
         //data fetch
-        const {email, password} = req.body;
+        const {email, password, token} = req.body;
         //validation on email and password
         if(!email || !password) {
             return res.status(400).json({
@@ -117,7 +117,10 @@ exports.login = async (req,res) => {
             });
         }
         console.log(customer._id)
-
+        if(token){
+          customer.deviceId = token;
+          customer.save();
+          }
         const payload = {
             email:customer.email,
             _id:customer._id,
