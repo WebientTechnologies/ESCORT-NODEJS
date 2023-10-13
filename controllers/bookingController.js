@@ -1,6 +1,13 @@
 const Booking = require('../models/booking');
-const User = require('../models/user')
-
+const User = require('../models/user');
+const Customer = require('../models/customer');
+const admin =require('../config/firebase-config');
+const { response } = require('express');
+const { CustomerProfiles } = require('aws-sdk');
+const notification_options = {
+    priority: "high",
+    timeToLive: 60 * 60 * 24
+  };
 exports.bookEscort = async(req, res) =>{
     try {
         const authenticatedUser = req.customer;
@@ -57,6 +64,26 @@ exports.bookEscort = async(req, res) =>{
             amount : totalPrice,
         });
 
+        const escortDeviceToken = escort.deviceId;  // Assuming you have a device token for the escort
+        const payload = {
+          notification: {
+            title: 'Booking Confirmation',
+            body: 'You have a new booking request.'
+          }
+        };
+    
+        await admin.messaging().send({
+          token: escortDeviceToken,
+          notification: payload.notification
+        })
+        .then( response => {
+
+        response.status(200).send("Notification sent successfully")
+        
+        })
+        .catch( error => {
+            console.log(error);
+        });
         await newbooking.save();
         await User.updateOne({ _id: userId }, { $inc: { bookedCount: 1 } });
         return res.status(201).json({ message: 'You Booked Escort successfully' });
@@ -193,6 +220,21 @@ exports.updateBookingStatus = async(req, res) =>{
             console.log(`Booking with ID ${req.body.UserId} not found`);
             return res.status(404).json({ error: 'Booking not found' });
           }
+
+        const customerId = updateStatus.customerId;
+        const customer = await Customer.findById(customerId);
+        const token = customer.deviceId;
+        const payload = {
+            notification: {
+              title: 'Booking Status',
+              body: 'You Bokking with bookingId' + ' ' + bookingId + ' ' + 'is now' + ' ' + status
+            }
+          };
+      
+          await admin.messaging().send({
+            token: token,
+            notification: payload.notification
+          });
           res.json({ message: 'Booking Status Updated successfully' });
     } catch (error) {
         console.error(error);
