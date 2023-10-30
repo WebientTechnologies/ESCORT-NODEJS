@@ -108,6 +108,11 @@ const users = new mongoose.Schema(
             enum:["Admin", "Escort"],
             default:"Escort"
         },
+        nationality:{
+            type:String,
+            required:false,
+            maxLength:255,
+        },
         city:{
             type:String,
             required:false,
@@ -134,6 +139,21 @@ const users = new mongoose.Schema(
             required:false,
         }],
         deviceId:{
+            type:String,
+            required:false,
+            maxLength:800,
+        },
+        fb:{
+            type:String,
+            required:false,
+            maxLength:800,
+        },
+        insta:{
+            type:String,
+            required:false,
+            maxLength:800,
+        },
+        of:{
             type:String,
             required:false,
             maxLength:800,

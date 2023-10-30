@@ -10,6 +10,7 @@ const commissionController = require('../controllers/commissionController');
 const bookingController = require('../controllers/bookingController');
 const escortDashboardController =require('../controllers/escortDashboardController');
 const dashboardController = require('../controllers/dashboardController');
+const faqsController = require('../controllers/faqsController');
 
 
 
@@ -18,6 +19,7 @@ const {auth, isAdmin, isEscort}  = require('../middlewares/Auth');
 
 const {customerAuth} = require('../middlewares/CustomerAuth');
 const { imageSingleUpload , imageMultiUpload} = require("../middlewares/multer");
+const faqs = require("../models/faqs");
 // Home 
 router.get("/", (req, res) =>{
     res.send("Welcome to UB Factory Backend");
@@ -107,5 +109,13 @@ router.get("/dashboard", auth, escortDashboardController.getTotalBookingsForUser
 //Dashboard Route//
 router.get("/get-dashboard-data", auth, isAdmin,dashboardController.dashBoardData );
 router.get("/get-month-wise-booking", auth, isAdmin,dashboardController.getMonthlyBookingCounts );
+
+//faq Route//
+router.post("/create-faq", auth, isAdmin, faqsController.createFaq);
+router.put("/update-faq/:id", auth, isAdmin, faqsController.updateFaq);
+router.get("/get-all-faq", faqsController.getAllFaqs);
+router.get("/get-faq-by-id/:id", faqsController.getFaqById);
+router.delete("/delete-faq/:id", auth, isAdmin, faqsController.deleteFaq);
+
 
 module.exports = router;

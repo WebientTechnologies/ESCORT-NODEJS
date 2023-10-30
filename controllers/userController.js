@@ -403,7 +403,7 @@ exports.updateUser = async(req,res) =>{
     const authenticatedUser = req.user;
 
     const userId = authenticatedUser._id;
-    const { name, email, mobile, dob, city, state, pincode,address, bio, price, serviceIds, removeFiles} = req.body;
+    const { name, email, mobile, dob, city, state, pincode,address, bio, price, fb, insta, of, nationality, serviceIds, removeFiles} = req.body;
     const updatedBy = userId;
 
     const files = req.s3FileUrls;
@@ -455,6 +455,10 @@ exports.updateUser = async(req,res) =>{
        user.state =state;
        user.pincode =pincode;
        user.address = address;
+       user.fb = fb;
+       user.insta = insta;
+       user.of = of;
+       user.nationality = nationality;
        user.updatedBy = updatedBy;
        user.updatedAt = Date.now()
        // Remove files with the specified IDs
@@ -481,7 +485,7 @@ exports.updateMyProfile = async(req,res) =>{
   const authenticatedUser = req.user;
 
   const userId = authenticatedUser._id;
-  const { name, email, mobile, dob, city, state, pincode,address, bio, price} = req.body;
+  const { name, email, mobile, dob, city, state, pincode,address, bio, price, fb, insta, of, nationality} = req.body;
   const updatedBy = userId;
 
 //   const files = req.s3FileUrls;
@@ -522,7 +526,7 @@ exports.updateMyProfile = async(req,res) =>{
   }
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { name, email, mobile, age, dob, bio, price, city, state, pincode,address, updatedBy, updatedAt: Date.now() },
+      { name, email, mobile, age, dob, bio, price, nationality, city, state, pincode,address, fb, insta, of, updatedBy, updatedAt: Date.now() },
       { new: true }
     );
 
