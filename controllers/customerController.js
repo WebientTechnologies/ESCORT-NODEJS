@@ -11,13 +11,13 @@ const { initializeApp } = require('firebase/app');
 const { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword} = require('firebase/auth');
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBCWHyFbekCei5ypdXxX4xf-aDA2gs0JKY",
-  authDomain: "escort-df1c6.firebaseapp.com",
-  projectId: "escort-df1c6",
-  storageBucket: "escort-df1c6.appspot.com",
-  messagingSenderId: "957337834561",
-  appId: "1:957337834561:web:c814f61179358348cfe2c0",
-  measurementId: "G-CT1EHSJC1C"
+  apiKey: "AIzaSyDsJjN0sFH0YORl7_lK0QfP7ltf7CIJSho",
+  authDomain: "naughty-nz.firebaseapp.com",
+  projectId: "naughty-nz",
+  storageBucket: "naughty-nz.appspot.com",
+  messagingSenderId: "1093026425987",
+  appId: "1:1093026425987:web:4c04a6bf43f06bbe73ffb6",
+  measurementId: "G-G18XR8BH4C"
 };
 
 const app = initializeApp(firebaseConfig);
