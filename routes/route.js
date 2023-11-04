@@ -34,7 +34,7 @@ router.put("/update-my-profile", auth, userController.updateMyProfile);
 router.put("/update-my-gallery",imageMultiUpload, auth, userController.updateMyGallery);
 router.put("/update-my-services", auth, userController.updateUserServices);
 router.put("/update-user-status", auth, isAdmin, userController.updateUserStatus);
-router.get("/get-all-users", userController.getUser);
+router.get("/get-all-users",customerAuth, userController.getUser);
 router.get("/get-all-users-for-admin", auth, isAdmin, userController.getUserForAdmin);
 router.get("/get-user-by-id/:id",  userController.getUserById);
 router.delete("/delete-user/:id", auth, isAdmin, userController.deleteUser);

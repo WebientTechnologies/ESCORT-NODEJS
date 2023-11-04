@@ -391,13 +391,16 @@ exports.addTofavorite = async (req, res) => {
     if (!customer) {
       return res.status(404).json({ message: 'Customer not found' });
     }
+    console.log('userId:', userId);
+    console.log('customer.favorites:', customer.favorites);
 
     if (!customer.favorites.includes(userId)) {
       customer.favorites.push(userId);
+      console.log('Customer after adding to favorites:', customer);
       await customer.save();
     }
 
-    return res.status(200).json({ message: 'Added As Favirate successfully' });
+    return res.status(200).json({data:customer, message: 'Added As Favirate successfully' });
   } catch (error) {
     console.error('Error:', error);
     return res.status(500).json({ message: 'An error occurred' });

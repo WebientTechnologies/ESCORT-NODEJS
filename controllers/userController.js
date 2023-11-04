@@ -302,6 +302,12 @@ exports.getMyProfile = async (req, res) => {
 
 exports.getUser = async (req, res) => {
   try {
+    const authenticatedUser = req.customer;
+    console.log(authenticatedUser);
+    if (!authenticatedUser || !authenticatedUser.favorites) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
     const page = parseInt(req.query.page) || 1;
     const pageSize = parseInt(req.query.pageSize) || 10;
     const filters = {};
@@ -340,7 +346,19 @@ exports.getUser = async (req, res) => {
 
     const usersWithRatings = await Promise.all(users.map(async (user) => {
       const ratings = await Rating.find({ userId: user._id });
-      const bookings = await Booking.find({userId:user._id, bookingStatus:"accepted"})
+      const bookings = await Booking.find({userId:user._id, bookingStatus:"accepted"});
+      const isFavourite = authenticatedUser.favorites.includes(user._id);
+
+      user.isFavourite = isFavourite;
+
+      let totalRating = 0;
+      if (ratings.length > 0) {
+        totalRating = ratings.reduce((sum, rating) => sum + rating.rating, 0);
+        user.overAllRating = totalRating / ratings.length;
+      } else {
+        user.overAllRating = 0; // Set a default if no ratings are available
+      }
+      
       return { ...user, ratings, bookings };
     }));
 
