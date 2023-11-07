@@ -347,7 +347,7 @@ exports.getUser = async (req, res) => {
     const usersWithRatings = await Promise.all(users.map(async (user) => {
       const ratings = await Rating.find({ userId: user._id });
       const bookings = await Booking.find({userId:user._id, bookingStatus:"accepted"});
-      const isFavourite = authenticatedUser.favorites.includes(user._id);
+      const isFavourite = authenticatedUser.favorites.includes(user._id)?1:0;
 
       user.isFavourite = isFavourite;
 
@@ -626,12 +626,41 @@ exports.updateUserServices = async (req, res) => {
 
 exports.getPopular = async (req, res) =>{
   try {
+    const authenticatedUser = req.customer;
+    console.log(authenticatedUser);
+    if (!authenticatedUser || !authenticatedUser.favorites) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
     const role = "Escort";
     const users = await User.find({role:role})
       .select('-password')
       .populate('serviceIds')
-      .sort({ bookedCount: -1 }) // Sort by bookedCount in descending order
-      .limit(5); // Limit the result to 10 users
+      .sort({ bookedCount: -1 }) 
+      .limit(5).lean();
+
+      if (!users) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+  
+      const usersWithRatings = await Promise.all(users.map(async (user) => {
+        const ratings = await Rating.find({ userId: user._id });
+        const bookings = await Booking.find({userId:user._id, bookingStatus:"accepted"});
+        const isFavourite = authenticatedUser.favorites.includes(user._id)?1:0;
+  
+        user.isFavourite = isFavourite;
+  
+        let totalRating = 0;
+        if (ratings.length > 0) {
+          totalRating = ratings.reduce((sum, rating) => sum + rating.rating, 0);
+          user.overAllRating = totalRating / ratings.length;
+        } else {
+          user.overAllRating = 0; // Set a default if no ratings are available
+        }
+        
+        return { ...user, ratings, bookings };
+      }));
+  
+      return res.json({ users: usersWithRatings });
 
     res.json({ success: true, users });
   } catch (error) {
