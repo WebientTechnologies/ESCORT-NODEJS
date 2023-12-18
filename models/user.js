@@ -45,10 +45,70 @@ const users = new mongoose.Schema(
             required:false,
             maxLength:500,
         },
-        price: {
+        prices: [{
+           bookingHrs:{
+                type:String,
+                required:false,
+                maxLength:50,
+           },
+           price:{
+                type:String,
+                required:false,
+                maxLength:50,
+           },
+        }],
+        ethnicity: {
             type:String,
             required:false,
-            maxLength:50,
+            maxLength:255,
+        },
+        bodyType: {
+            type:String,
+            required:false,
+            enum:[ "curvy", "busty", "athletic", "slim", "BBW"],
+            default:"curvy"
+        },
+        languages: {
+            type:String,
+            required:false,
+            enum:[ "english", "chinese"],
+            default:"english"
+        },
+        height: {
+            type:String,
+            required:false,
+            maxLength:255,
+        },
+        weight: {
+            type:String,
+            required:false,
+            maxLength:255,
+        },
+        breastSize: {
+            type:String,
+            required:false,
+            enum:[ "A", "B", "C", "D", "DD", "E", "F"],
+            default:"A"
+        },
+        hairColor: {
+            type:String,
+            required:false,
+            enum:[ "brunette", "blond", "red", "black", "other"],
+            default:"brunette"
+        },
+        meetingWith: [{
+            type:String,
+            required:false,
+            enum:[ "men", "women", "transgender"],
+            default:"men"
+        }],
+        incalls: {
+            type:Boolean,
+            defaault:false,       
+        },
+        outcalls: {
+            type:Boolean,
+            defaault:false,       
         },
         otp: {
             type:String,

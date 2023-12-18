@@ -2,6 +2,7 @@ const User = require("../models/user");
 const Rating = require('../models/rating');
 const Booking = require('../models/booking');
 const Services = require('../models/service');
+const Subscription = require('../models/subscription');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
@@ -31,7 +32,7 @@ const auth = getAuth(app);
 
 exports.signUp = async (req, res) => {
   try {
-    const { name, email, mobile, password } = req.body;
+    const { name, email, mobile, password, planId} = req.body;
 
     // Check if the email or mobile already exists in the database
     const existingUser = await User.findOne({
@@ -69,6 +70,23 @@ exports.signUp = async (req, res) => {
     // Save the new customer to the database
     await newUser.save();
 
+    if(planId === 0){
+      const newSubscription = new Subscription({
+        userId: newUser._id,
+        planId,
+        isActive:true
+      });
+
+      await newSubscription.save();
+    }else{
+      const subscription = new Subscription({
+        userId: newUser._id,
+        planId
+      });
+
+      await subscription.save();
+    }
+    
     createUserWithEmailAndPassword(auth, email, password)
       .then(async (userCredential) => {
         const user = userCredential.user;
@@ -421,7 +439,7 @@ exports.updateUser = async(req,res) =>{
     const authenticatedUser = req.user;
 
     const userId = authenticatedUser._id;
-    const { name, email, mobile, dob, city, state, pincode,address, bio, price, fb, insta, of, nationality, serviceIds, removeFiles} = req.body;
+    const { name, email, mobile, dob, city, state, pincode,address, bio, ethnicity, bodyType, languages, height, weight, breastSize, hairColor, meetingWith, incalls, outcalls, prices, fb, insta, of, nationality, serviceIds, removeFiles} = req.body;
     const updatedBy = userId;
 
     const files = req.s3FileUrls;
@@ -467,7 +485,17 @@ exports.updateUser = async(req,res) =>{
        user.dob = dob;
        user.age = age;
        user.bio = bio;
-       user.price = price;
+       user.ethnicity= ethnicity; 
+       user.bodyType = bodyType; 
+       user.languages = languages; 
+       user.height = height; 
+       user.weight = weight;
+       user.breastSize = breastSize;
+       user.hairColor = hairColor;
+       user.meetingWith = meetingWith;
+       user.incalls = incalls;
+       user.outcalls = outcalls;
+       user.prices = prices;
        user.serviceIds = serviceIds;
        user.city = city;
        user.state =state;
@@ -503,7 +531,7 @@ exports.updateMyProfile = async(req,res) =>{
   const authenticatedUser = req.user;
 
   const userId = authenticatedUser._id;
-  const { name, email, mobile, dob, city, state, pincode,address, bio, price, fb, insta, of, nationality} = req.body;
+  const { name, email, mobile, dob, city, state, pincode,address, bio, ethnicity, bodyType, languages, height, weight, breastSize, hairColor, meetingWith, incalls, outcalls, prices, fb, insta, of, nationality} = req.body;
   const updatedBy = userId;
 
 //   const files = req.s3FileUrls;
@@ -544,7 +572,7 @@ exports.updateMyProfile = async(req,res) =>{
   }
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { name, email, mobile, age, dob, bio, price, nationality, city, state, pincode,address, fb, insta, of, updatedBy, updatedAt: Date.now() },
+      { name, email, mobile, age, dob, bio, ethnicity, bodyType, languages, height, weight, breastSize, hairColor, meetingWith, incalls, outcalls, prices, nationality, city, state, pincode,address, fb, insta, of, updatedBy, updatedAt: Date.now() },
       { new: true }
     );
 

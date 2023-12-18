@@ -11,6 +11,8 @@ const bookingController = require('../controllers/bookingController');
 const escortDashboardController =require('../controllers/escortDashboardController');
 const dashboardController = require('../controllers/dashboardController');
 const faqsController = require('../controllers/faqsController');
+const planController = require('../controllers/planController');
+const subscriptionController = require('../controllers/subscriptionController');
 
 
 
@@ -116,6 +118,14 @@ router.put("/update-faq/:id", auth, isAdmin, faqsController.updateFaq);
 router.get("/get-all-faq", faqsController.getAllFaqs);
 router.get("/get-faq-by-id/:id", faqsController.getFaqById);
 router.delete("/delete-faq/:id", auth, isAdmin, faqsController.deleteFaq);
+
+//Plan Routes//
+router.post("/create-plan", auth, isAdmin, planController.createPlan);
+router.get("/plans", planController.getPlans);
+
+//subscription routes//
+router.post("/create-payment", subscriptionController.createPayment);
+router.post("/success-payment", subscriptionController.successPayment);
 
 
 module.exports = router;

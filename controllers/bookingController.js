@@ -17,14 +17,14 @@ exports.bookEscort = async(req, res) =>{
 
         const escort = await User.findById(userId);
 
-        const price = escort.price;
+        const prices = escort.prices;
         const [hrs, minutes] = bookingHrs.split(':').map(Number);
         const [hours, minute] = bookingTime.split(':').map(Number);
         const bookingHrsDecimal = hrs + (minutes / 60);
 
         // Calculate total price
-        const totalPrice = price * bookingHrsDecimal;
-
+        const foundPrice  = prices.find(item => item.bookingHrs === bookingHrs);
+        const totalPrice = parseFloat(foundPrice.price);
         const currentDate = new Date();
         
         const requestedBookingDate = new Date(bookingDate);
@@ -64,26 +64,28 @@ exports.bookEscort = async(req, res) =>{
             amount : totalPrice,
         });
         const name = authenticatedUser.name;
-        const escortDeviceToken = escort.deviceId;  // Assuming you have a device token for the escort
-        const payload = {
-          notification: {
-            title: 'Booking Confirmation',
-            body: name + ' ' + ' ' +'has sent booking request.'
-          }
-        };
-    
-        await admin.messaging().send({
-          token: escortDeviceToken,
-          notification: payload.notification
-        })
-        .then( response => {
-
-        response.status(200).send("Notification sent successfully")
+        const escortDeviceToken = escort.deviceId; 
+        if(escortDeviceToken != undefined){
+            const payload = {
+            notification: {
+                title: 'Booking Confirmation',
+                body: name + ' ' + ' ' +'has sent booking request.'
+            }
+            };
         
-        })
-        .catch( error => {
-            console.log(error);
-        });
+            await admin.messaging().send({
+            token: escortDeviceToken,
+            notification: payload.notification
+            })
+            .then( response => {
+
+            response.status(200).send("Notification sent successfully")
+            
+            })
+            .catch( error => {
+                console.log(error);
+            });
+        }
         await newbooking.save();
         await User.updateOne({ _id: userId }, { $inc: { bookedCount: 1 } });
         return res.status(201).json({ message: 'You Booked Escort successfully' });
