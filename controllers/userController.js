@@ -351,6 +351,62 @@ exports.getUser = async (req, res) => {
       filters.serviceIds = { $in: [req.query.serviceId] }; 
     }
 
+    if (req.query.ethnicity) {
+      const ethnicityValues = req.query.ethnicity.split(','); 
+      filters.ethnicity = { $in: ethnicityValues.map(value => new RegExp(value, 'i')) };
+    }
+    
+    if (req.query.languages) {
+      const languageValues = req.query.languages.split(',');
+      filters.languages = { $in: languageValues.map(value => new RegExp(value, 'i')) };
+    }
+    
+    if (req.query.bodyType) {
+      const bodyTypeValues = req.query.bodyType.split(',');
+      filters.bodyType = { $in: bodyTypeValues.map(value => new RegExp(value, 'i')) };
+    }
+    
+    if (req.query.hairColor) {
+      const hairColorValues = req.query.hairColor.split(',');
+      filters.hairColor = { $in: hairColorValues.map(value => new RegExp(value, 'i')) };
+    }
+
+    if (req.query.heightFrom && req.query.heightTo) {
+      filters.height = {
+        $gte: req.query.heightFrom,
+        $lte: req.query.heightTo
+      };
+    }
+    
+    if (req.query.weightFrom && req.query.weightTo) {
+      filters.weight = {
+        $gte: req.query.weightFrom,
+        $lte: req.query.weightTo
+      };
+    }
+
+    if (req.query.priceFrom && req.query.priceTo) {
+      filters.prices = {
+        $elemMatch: {
+          bookingHrs: { $in: ["30 minutes", "1 hr", "2 hrs"] },
+          price: { $gte: req.query.priceFrom, $lte: req.query.priceTo }
+        }
+      };
+    }
+
+    if (req.query.breastSize) {
+      filters.breastSize = { $regex:req.query.breastSize, $options: 'i' };
+    }
+
+    if (req.query.incalls) {
+      filters.incalls = { $regex:req.query.incalls, $options: 'i' };
+    }
+
+    if (req.query.outcalls) {
+      filters.outcalls = { $regex:req.query.outcalls, $options: 'i' };
+    }
+
+
     const users = await User.find(filters)
       .select('-password')
       .populate('serviceIds')
@@ -439,9 +495,9 @@ exports.updateUser = async(req,res) =>{
     const authenticatedUser = req.user;
 
     const userId = authenticatedUser._id;
-    const { name, email, mobile, dob, city, state, pincode,address, bio, ethnicity, bodyType, languages, height, weight, breastSize, hairColor, meetingWith, incalls, outcalls, prices, fb, insta, of, nationality, serviceIds, removeFiles} = req.body;
+    const { name, email, mobile, dob, city, state, pincode,address, bio, ethnicity, bodyType, languages, height, weight, breastSize, hairColor, meetingWith, incalls, outcalls, fb, insta, of, nationality, serviceIds, removeFiles} = req.body;
     const updatedBy = userId;
-
+    const prices = JSON.parse(req.body.prices);
     const files = req.s3FileUrls;
     console.log(files);
     try {
